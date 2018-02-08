@@ -1,4 +1,4 @@
-package basic.chapter1;
+package basic.chapter1.intro;
 
 public class Apple {
     int weight;

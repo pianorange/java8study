@@ -1,8 +1,7 @@
-package basic.chapter1;
+package basic.chapter1.intro;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 

@@ -69,10 +69,10 @@ _ _ _
 
 
 * * *
+<br><br>
 
-
-** 3.2 어디에, 어떻게 람다를 사용할까? **
-- - -
+**3.2 어디에, 어떻게 람다를 사용할까?**
+-
 
 -> 함수형 인터페이스라는 문맥에서 람다표현식을 사용할 수 있다.<br>
 
@@ -82,6 +82,7 @@ _ _ _
 함수형 인터페이스 Predicate<T>를 기대하는 filter메서드의 두번째 인수로 람다표현식을 전달했다.
 
 **3.2.1 함수형 인터페이스**
+-
 함수형 인터페이스는 하나의 추상메서드를 지정하는 인터페이스다.<br>
 람다표현식으로 함수형 인터페이스의 추상 메서드 구현을 직접 전달 가능<br>
 ->전체 표현식을 함수형 인터페이스의 인스턴스 취급<br>
@@ -109,3 +110,271 @@ _ _ _
 
 
 
+
+3.2.2 함수 디스크립터
+-
+함수형 인터페이스의 추상메서드 시그너처signature는 람다표현식의 시그너처를 가리킨다.<br>
+
+![](https://i.stack.imgur.com/NLlbQ.png)
+https://stackoverflow.com/questions/16149285/does-a-methods-signature-in-java-include-its-return-type
+
+람다 표현식의 시그너처를 서술하는 메서드를 함수 디스크립터function descriptor 라고부른다.
+
+
+@FunctionalInterface란 무엇인가?
+자바8 API 중 함수형 어노테이션에 추가된 어노테이션.
+이 어노테이션을 선언한 인터페이스가 실제로 단 하나의 추상메서드를 갖는<br>
+함수형 인터페이스가 아닐 시 컴파일 에러가 발생한다.<br>
+
+**람다의 활용 예**
+-
+3.3 람다 활용 실행어라운드 패턴
+-
+<br>
+자원처리에 사용하는 순환패턴 recurrent pattern은 자원을 [열고]
+[처리]한다음,[닫는]순서로 이뤄진다.<br>
+즉,실제 자원을 처리하는 설정과 정리 두과정이 둘러싸는 형태를 갖는다<br>
+이런 형태를 실행 어라운드 패턴execute around pattern 이라 부른다.
+
+| 초기화/준비 코드 | 초기화/준비 코드 |
+|--------|--------|
+|   작업A     | 작업B       |
+|정리/마무리 코드|정리/마무리 코드|
+
+이와 같이 실행 어라운트 패턴
+1. 동작파라미터화
+
+```
+  public static String processFile() throws IOException{
+        try(BufferedReader br =
+                new BufferedReader(new FileReader("data.txt"))){
+            return br.readLine();
+        }
+    }
+```
+
+위의 코드는 한번에 한줄만 읽어온다.<br>
+기존의 설정, 정리과정 재사용하고 processFile메서드만 다른동작을 수행하도록<br>람다를 통해 개선할 수 있다.<br>
+활용하고 싶은메서드의 시그니처는 BufferedReader -> String 과 IOException 쓰로우 할 수 있는 형태로 이루어져 있다.<br>
+함수형 인터페이스를 사용하기 위해 대상 메서드의 시그니처와 일치하는 함수형 인터페이스를 만든다.
+
+```
+@FunctionalInterface
+public interface BufferedReaderProcessor {
+    String process(BufferedReader b) throws IOException;
+}
+```
+다음과 같이 설정하면, precessFile메서드의 파라메터로 함수형인터페이스를 받아동작파라미터화를 구현할 수 있다.<br>
+```
+public static String processFile(BufferedReaderProcessor b) 
+   throws IOException{
+        try(BufferedReader br =
+                new BufferedReader(new FileReader("data.txt"))){
+            return b.process(br);
+        }
+    }
+
+```
+다음과 같이 함수형인터페이스를 파라미터로 받도록 기존 메서드를 수정하고 
+return 부분에서 함수형인터페이스의 추상메서드 process를 구현하도록한 후,
+람다표현식을 파라미터로 보냄으로서, processFile메서드를 더 유연하게 사용할 수 있다.
+```
+   excuteclass.processFile((BufferedReader br) ->
+                                                br.readLine()   );
+  //두줄을 받아오고 싶을 경우 다음과 같이 유연하게 활용하는 것도 가능하다.
+   excuteclass.processFile((BufferedReader br) ->
+                                                br.readLine() + br.readLine()  );
+                                       
+```
+
+지금까지 함수형 인터페이스이용 람다를 전달하는 방법을 배웠다.
+다음절에서는 다양한 람다를 전달하는 데 재활용할 수 있도록 자바 8 에추가 된 새로운 인터페이스를 살펴본다.<br>
+
+**3.4 함수형 인터페이스 사용**
+-
+- 함수형 인터페이스는 오직 하나의 추상메서드 지정.
+- **함수형 인터페이스의 추상 메서드는 람다 표현식의 시그너처를 묘사.**
+
+```
+함수형 인터페이스의 추상메서드 시그너처 = 
+함수 디스크립터function descriptor
+
+```
+- 다양한 람다 표현식 사용위해 공통의 함수 디스크립터 기술하는 함수형 인터페이스 집합이 필요하다.
+- 이미 자바 API는 Comparable, Runnable, Callable등 다양한 함수형 인터페이스 포함
+- 자바 8 라이브러리 설계자들 java.util.function 패키지로 여러 새로운 함수형 인터페이스 제공 (Predicate, Consumer, Function 등)
+
+```
+
+**■ 여기서부터는 제네릭에 대한 이해가 필요**
+https://www.bsidesoft.com/?p=2903
+http://palpit.tistory.com/667
+
+**자바 제네릭의 활용 종류**
+- 제네릭 타입
+- 멀티 타입 파라미터
+- 제네릭 메소드
+- 제한된 타입 파라미터 & 와일드카드 타입
+- 제네릭 타입의 상속과 구현
+
+
+
+ 제네릭 코드에서 물음표(?)는 와일드카드로 불리며, 알 수 없는 타입을 나타낸다. 와일드카드는 파라미터, 필드, 지역 변수의 타입 또는 때때로 반환 타입과 같은 다양한 상황에서 사용될 수 있다. 와일드 카드는 제네릭 메소드 호출에 대한 형식 인수, 제네릭 클래스 인스턴스 생성, 또는 슈퍼타입으로 사용될 수 없다.
+
+
+1. Upper Bounded Wildcards
+  변수의 제한을 완화하기 위해 upper bounded wildcard를 사용할 수 있다. 예를 들어,  List<Integer>, List<Double>, List<Number>를 인자로 받을 수 있는 메소드를 만들기 위해서 upper bounded wildcard를 사용할 수 있다.
+
+
+  public static void process(List<? extends Number> list) {
+          //
+   }
+  
+2. Unbounded Wildcards
+  unbounded wildcard 타입은 List<?> 와 같이 물음표 만으로 정의 되어 진다(모든 타입을 인자로 받을 수 있다). 이 방법은 두 가지 유효한 사용법이 있다. 첫 번째는 Object 클래스에서 제공되는 기능만을 사용할 경우이고, 두 번째는 제네릭 클래스의 메소드들중에 List.size, List.clear처럼 타입 파라미터에 의존하지 않는 메소드들만을 사용할 경우이다.
+
+3. Lower Bounded Wildcards
+  lower bounded wildcard는 <? super A>와 같이 물음표와 super 키워드로 정의한다. upper bounded wildcard와는 반대로 지정된 타입과 그 상위타입만을 허용한다. 예로 List<? super Integer> 로 정의 하면 Integer의 상위인 Number와 Object 가 사용 가능하다.
+
+
+
+
+
+
+
+```
+<br>
+
+**3.4.1 Predicate**
+-
+```
+@FunctionalInterface
+public interface Predicate<T>{
+	boolean test(T t);
+}
+```
+
+- java.util.function.Predicate<T> 인터페이스는 test라는 추상 메서드를 정의
+- test는 제네릭 형식 T객체를 인수로 받아 boolean반환.
+
+사용예는 다음과 같다.
+```
+
+public static <T> List<T> filter(List<T> list, Predicate<T> p) {
+	 List<T> results = new ArrayList<>();
+     for (T s: list){
+     	if(p.test(s)) {
+        	results.add(s);
+        }
+     }
+     return results;
+}
+
+//호출부
+Predicate<String> nonEmptyStringPredicate = 
+									(String s) -> !s.isEmpty();
+List<String> nonEmpty = filter(listOfStrings, 					   
+										nonEmptyStringPredicate);
+                                        
+
+
+
+```
+<br>
+
+**3.4.2 Consumer**
+-
+- java.util.function.Consumer<T> 인터페이스는 제네릭 형식 T객체 받아 void 반환하는 accept 추상메서드 정의.
+- T형식 객체 인수로 받아 어떤 동작 수행하고 싶을 때 사용.
+- 예를 들어 Integer 리스트 인수 받아 각 항목 어떤 동작 수행 forEach메서드 정의시 활용.
+
+사용예는 다음과 같다.
+
+```
+@FunctionalInterface
+public interface Consumer<T> {
+	void accept(T t);
+}
+
+public static <T> void forEach(List<T> list, Consumer<T> c){
+	 for(T i: list) {
+     	 c.accept(i);
+     }
+}
+
+//위의 forEach메서드 호출
+//파라미터로 리스트, 람다(Consumer인터페이스의 accept구현)
+forEach(
+	Arrays,asLIst(1,2,3,4,5),
+    (Integer i) -> System.out.println(i)
+)
+
+```
+
+**3.4.3 Function**
+-
+- java.util.function.Function<T,R> 인터페이스는 제네릭형식 T를 인수로 받아서 제네릭형식 R객체를 반환하는 apply메서드 정의.
+- 입력을 출력으로 매핑하는 람다를 정의할 때 활용(예를 들어 사과 무게정보 추출하거나, 문자열을 길이와 매핑)
+- 다음은 String리스트 인수로 받아 각 String길이를 포함하는 Integer리스트로 변환하는 map메서드 정의하는 예제
+
+```
+@FunctionalInterface
+public interface Function<T,R> {
+	R apply(T t);
+}
+
+public static <T, R> List<R> map(List<T> list, Function<T,R> f){
+	List<R> result = new ArrayList<>();
+    for (T s : list){
+    	result.add(f.apply(s));
+    }
+    return result;
+}
+//위의 map 메서드 호출부
+//파라미터 List , 람다(Function인터페이스의 apply구현)
+//[7,2,6]
+List<Integer> l = map(
+					Array.asList("lambdas","in","action"),
+                    (String s) -> s.length()
+                    );
+
+```
+<br>
+
+**기본형 특화**
+-
+- 자바의 모든형식은 reference type과 primitive type 으로 나뉜다.
+- **But** 제네릭 파라미터 (ex Consumer<T>의 T)에는 참조형만 사용가능.
+- 이는 제네릭 내부구현 때문에 어쩔 수 없는일.(C#에는 이런 제약없고,스칼라는 참조형타입만 존재한다.)
+- 자바에서는 기본형을 참조형으로 박싱하는 기능 제공. (반대는 언박싱이라 부름) <br>
+-> 그래서 boxing 과 unboxing 자동으로 이루어지는 autoboxing기능 제공
+
+```
+LIst<Integer> list = new ArrayList();
+list.add(100); <--Integer로 오토박싱됨
+```
+
+**But** 이러한 변환과정 비용 소모.
+- 박싱한 값 기본형 감싸는 래퍼이며, 힙에 저장됨.
+- 박싱한 값은 메모리를 더 사용하며, 기본형 가져올 때도 메모리 탐색하는 과정이 필요.
+
+```
+자바 8에서는 기본형을 입출력으로 사용하는 상황에서 오토박싱 피할 수 있도록 특별한 함수형 인터페이스 제공
+
+ex)
+    public interface IntPredicate {
+        boolean test(int i);
+    }
+    
+    IntPredicate evenNumbers = (Int i) -> i % 2 == 0;
+    evenNumbers.test(1000); <-- boxing X 
+    
+    Predicate<Integer> oddNumbers = (Integer i) -> i % 2 == 1;
+    oddNumbers.test(1000)  <-- autoBoxing 
+
+
+    
+```
+
+
+ 
