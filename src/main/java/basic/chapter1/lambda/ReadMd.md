@@ -341,6 +341,23 @@ List<Integer> l = map(
 ```
 <br>
 
+
+■함수형 인터페이스는 제네릭파리미터로 고정된 타입의 제약에서 벗어나게 해줘
+더 일반화된 코드를 구현할 수 있도록 해주고, 람다를 통해 구현할 표현식의 시그니처를 제공한다.
+T 첫번째파라미터 U 두번째 파라미터 R 리턴타입 으로 구성된 함수형인터페이스 
+두개의 파라미터 T, U 리턴타입으로는 R 을 리턴하는 시그니처를 제공
+```
+//        @FunctionalInterface
+//        public interface BiFunction<T, U, R> {
+//
+//                * @param <T> the type of the first argument to the function
+//                * @param <U> the type of the second argument to the function
+//                * @param <R> the type of the result of the function
+//                  R apply(T t, U u); 
+
+```
+ 
+
 **기본형 특화**
 -
 - 자바의 모든형식은 reference type과 primitive type 으로 나뉜다.
@@ -371,10 +388,103 @@ ex)
     
     Predicate<Integer> oddNumbers = (Integer i) -> i % 2 == 1;
     oddNumbers.test(1000)  <-- autoBoxing 
-
-
-    
 ```
 
+3.5.3 형식추론 
+-
+자바컴파일러는 람다표현식이 사용된 콘텍스트(대상형식)이용 람다표현식과 관련된 인터페이스 추론<br>
+대상형식 이용해서 함수 디스크립터 알 수 있으므로 컴파일러는 람다의 시그니처도 추론<br>
+-> 컴파일러 람다표현식 파라미터 형식에 접근가능하므로 람다 문법에서 생략가능
 
- 
+```
+
+filter (ArrayList inventory,Predicate<Apple> p)
+
+List<Apple> grrenApples = 
+      filter(inventory, a -> "green".equals(a.getColor()));
+ 위의 예제에서 filter 메소드의 두번째 파라미터 타입은 Predicate<Apple> 이고, 함수형인터페이스 Predicate에는
+ boolean test (String a) 와 같은 시그니처를 가진 메소드가 있으므로 람다 디스크립터에서 사용한 a 의 타입추론가능
+
+//형식추론 사용하지 않음    
+Comparator<Apple> c = 
+    (Apple a1,Apple a2) -> a1.getWeight().comapareTo(a2.getWeight());
+//형식 추론 사용
+Comparator<Apple> c = 
+    (a1, a2) -> a1.getWeight().comapareTo(a2.getWeight());
+   
+```
+
+3.5.4 지역변수 사용
+-
+
+- 람다표현식은 파라미터로 넘겨진 변수가 아닌 외부에서 정의된 변수(free variable(자유변수)) 사용가능. (람다 캡처링)
+
+```
+//지역변수 캡처하는 예제
+int portNumber = 1337;
+Runnable r = () -> System.out.printls(portNumber);
+```
+
+**제약사항**
+
+- 람다 인스턴스변수와 정적변수 자유롭게 캡처(자신의 바디에서 참조)
+- 지역변수는 명시적으로 final 선언 or 실질적으로 final 선언된 변수와 똑같이 사용되야한다. <br>
+  즉, 람다 표현식은 한번만 할당할 수 있는 지역변수를 캡처가능(참고: 인스턴스 변수 캡처는 final 지역변수 this를 캡처하는 것과 마찬가지)
+  
+```
+//지역변수 캡처하는 예제
+int portNumber = 1337;
+Runnable r = () -> System.out.printls(portNumber);
+int portNumber = 2000; //값을 한번 더 할당하므로 람다 안에서 사용불가 컴파일 할수 없다.
+```  
+
+**지역변수의 제약**
+-
+- 내부적으로 인스턴스 변수와 지역변수 태생부터 다르다.
+- **인스턴스 변수는 힙에 저장**되는 반면 **지역변수는 스택에 위치**한다.
+
+```
+스택영역: 프로그램 실행과정에서 '임시로 할당' 되고 그게 끝나면 소멸되는 것들이 저장된다.
+즉, 메소드 호출시 로컬변수 준비하고 호출 끝나면 메소드 위해 준비했던 모든 변수 스택에서 제거.
+
+1. 스택 영역은 변수값 저장하는데 기본타입인 정수형 변수,실수형 변수, 논리형 변수를 실제값으로 저장.
+2. 크기가 정해져 있는 타입이다.
+3. 메모리 할당시 컴파일할때 이미 계산이 이루어진다.
+4. 메소드 작업이 종료되면 할당되었던 메모리 공간은 반환되어 비워진다.
+5. 지역변수와 매개변수가 저장된다.(즉, 선언된 블록안에서만 유효한 변수들이 스택에 담긴다.)
+
+
+힙영역: 인스턴스 변수의 값이 저장된다.(인스턴스변수의 주소값은 스택에 저장, 스택의 생명주기가 끝나
+(메소드 종료 등) 주소값을 잃어버리면 가비지컬랙터가 힙의 메모리를 정리한다.)
+스택에 저장되는 로컬,매개 변수와 달리 힙 영역에 보관되는 메모리는 메소드 호출이 끝나도 유지된다.
+
+
+```
+- 람다가 지역변수에 접근할 수 있다는 가정 하에 스레드에서 실행된다면 변수할당 스레드 사라져 변수할당 해제되었는데도 람다 실행하는 스레드에서는 해당 변수에 접근하려 할 수 있다.
+- 따라서, 자바구현에서는 원래변수에 접근 허용하는 것이 아니라 자유 지역변수(같은 블록이 아니어도 익명클래스, 람다가 접근할 수 있는 지역변수)의 복사본 제공.
+- 즉, 복사본의 값이 바뀌지 않아야 하므로 지역변수에는 한번만 값을 할당해야한다는 제약이 생긴 것.
+
+```
+클로저closure
+
+- 클로저란 비지역 변수 자유롭게 참조할 수 있는 함수의 인스턴스.
+- 즉, 클로저를 다른 함수의 인수로 전달 가능.
+- 클로저는 외부에 정의된 변수의 값에 접근, 수정 가능.
+
+->람다, 익명클래스는 클로저와 비슷하지만 '접근'만 가능. 
+람다가 정의된 메서드의 지역변수는 final or 한번만 값이 할당되야 함.
+
+->인스턴스변수(클래스변수, 필드변수)는 스레드가 공유하는 힙에 존재하므로 특별한 제약이 없다.
+
+    Supplier<dummyClass> supplier = () -> new dummyClass();
+
+        int testint= 100;
+        String testreference = "apple";
+        //consume Object
+        Consumer<dummyClass> consumer =  (dummyClass dummy) -> System.out.println( testint+ dummy.getClass().toString() + testreference );
+        consumer.accept(testdummy2);
+
+        testint = 200;//컴파일 에러!! 지역변수가 final이거나 final처럼 값이 한번만 할당되야한다.
+		testreference = "orange"//컴파일 에러!! 
+```
+
