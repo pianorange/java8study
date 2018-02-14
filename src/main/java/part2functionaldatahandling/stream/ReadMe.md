@@ -16,19 +16,38 @@ SELECT id FROM mebers WHERE  salary > 3000
 <JAVA 7>
 ```
 List<DIsh> lowCaloricDishes = new ArrayList<>();
+//칼로리 필터링
 for(Dish d: menu){
     if(d.getCalories() < 400){
         lowCaloricDishes.add(d);
     }
 }
-
+// 칼로리 기준 오름차순정렬
 Collections.sort(lowCaloricDishes , new Comparator<Dish>(){
     public int compare(Dish d1, Dish d2){
         return Integer.compare(d1.getCalories(), d2.getCalories());
     }
 });
 
-
-
-
+LIst<String> lowCaloricDishesName = new ArrayList<>();
+for(Dish d: lowCaloriDishes){
+//정렬된 리스트를 처리하면서 요리이름만 리스트에 담는다
+    lowCaloriDishesName.add(d.getName());
+}
 ```
+- 위 코드에서는 lowCaloricDishes라는 가비지 변수 즉, 컨테이너 역할만하는 중간변수 사용됨.
+- 자바8은 이런 세부구현 라이브러리 내에서 모두 처리.
+```aidl
+
+List<String> lowCaloricDishesName = 
+                 menu.stream()
+                    .filter(d -> d.getCalories() < 400)
+                    .sorted(comparing(Dish::getCalories))
+                    .map(Dish::getName)
+                    .collect(toList());
+ //여기서  menu.stream() 을 menu.parallelStrim() 으로하면 멀티코어 아키텍쳐에서 병렬로 실행됨.
+```
+
+
+                    
+               
