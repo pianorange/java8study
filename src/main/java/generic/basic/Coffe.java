@@ -1,3 +1,3 @@
-package generic;
+package generic.basic;
 
 public class Coffe { }

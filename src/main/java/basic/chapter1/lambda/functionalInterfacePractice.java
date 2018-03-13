@@ -9,6 +9,12 @@ public class functionalInterfacePractice {
     public void practiceMethod () {
         //boolean return
         Predicate<String> predicate = (String str) -> str.contains("a");
+
+        //intPredicate
+        IntPredicate intpredicate = (a) -> a > 100 ;
+        intpredicate.test(10);
+
+
         //create instance
         Supplier<dummyClass> supplier = () -> new dummyClass();
 
@@ -25,10 +31,6 @@ public class functionalInterfacePractice {
         //람다를 사용한 메서드의 지역변수는 final 혹은 final처럼 값이 한번만 할당 되야한다.
         //testint = 200;
         //testinstance = "orange";
-
-
-
-
 
         Function<String,Integer> function = (String str) ->  str.length();
         System.out.println(function.apply("aaaaa"));
