@@ -1,8 +1,6 @@
 package basic.chapter1.examplecode;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.Comparator.comparing;
@@ -74,22 +72,40 @@ public class Main {
 
     //5. 밀라노에 거래자가 있는가
     public void practice5(List<Transaction> transactions){
+        List<Trader> traders = transactions.stream()
+                                            .filter(t -> t.getTrader().getCity().equals("Milan"))
+                                            .map(t -> t.getTrader())
+                                            .collect(toList());
+        //or
 
+        boolean milanFlag = transactions.stream()
+                                        .anyMatch(t -> t.getTrader().getCity().equals("Milan"));
+        if(milanFlag){
+            System.out.println("practice5   Milan are!!!");
+        }
     }
 
     //6. 케임브리지 거주 거래자의 모든 트랜잭션값 출력
     public void practice6(List<Transaction> transactions){
-
+        List<Transaction> transactionList = transactions.stream()
+                                                        .filter(t -> t.getTrader().getCity().equals("Cambridge"))
+                                                        .collect(toList());
+        System.out.println("practice6   Milan are!!!");
+        transactionList.stream().forEach(System.out::println);
     }
 
     //7. 전체 트랜잭션 중 최댓값은 얼마인가.
     public void practice7(List<Transaction> transactions){
-
+        OptionalInt maxval = transactions.stream().mapToInt(t -> t.getValue()).max();
+        System.out.println("practice7   Milan are!!!");
+        System.out.println(maxval);
     }
 
     //8. 전체 트랜잭션 중 최솟값은 얼마인가.
     public void practice8(List<Transaction> transactions){
-
+        Optional<Transaction> smallestval = transactions.stream().reduce((t1, t2)->t1.getValue() < t2.getValue() ? t1 : t2);
+        System.out.println("practice8   Milan are!!!");
+        System.out.println(smallestval);
     }
     public static void main(String args[]){
         Trader raoul = new Trader("Raoul","Cambridge");
