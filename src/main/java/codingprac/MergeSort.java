@@ -5,8 +5,6 @@ public class MergeSort {
     static int[] buff;
 
     /**
-     * validate if a string is a palindrome ignoring spaces.
-     *
      * <pre>
      *     A = [1, 3, 9], B = [2, 9, 4]
      *     Solution is [1, 2, 3, 4, 9, 9]
